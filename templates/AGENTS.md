@@ -22,6 +22,7 @@ This document explains how different agent roles should use the skill system.
 - When assigning work, specify which skills the sub-agent should load.
 - Load `skills/workflow/` skills for planning and task decomposition.
 - Load `skills/ai-agents/superpowers-using-skills.md` for skill composition strategy.
+- Load `skills/ai-agents/manage-skills.md` when adding, configuring, or removing agent skills.
 
 **Typical skill chain**: `workflow/superpowers-brainstorming.md` → `workflow/superpowers-writing-plans.md` → `workflow/superpowers-executing-plans.md`
 
@@ -73,6 +74,7 @@ This document explains how different agent roles should use the skill system.
 - Load `skills/workflow/mattpocock-to-prd.md` for PRD generation.
 - Load `skills/workflow/mattpocock-to-issues.md` for issue creation.
 - Load `skills/workflow/mattpocock-triage.md` for backlog organization.
+- Load `skills/ai-agents/manage-skills.md` for planning skill setup changes.
 
 ---
 

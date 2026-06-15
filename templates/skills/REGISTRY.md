@@ -262,6 +262,12 @@
 
 ## AI Agents
 
+### Manage Agent Skills
+- Path: `skills/ai-agents/manage-skills.md`
+- Source: Custom Guide (internal templates)
+- Use when: User wants the agent to add, configure, classify, or remove skills in the system
+- Load priority: **high** (whenever the task involves managing, adding, or removing skills)
+
 ### Writing New Agent Skills
 - Path: `skills/ai-agents/superpowers-writing-skills.md`
 - Source: `sources/github/superpowers/skills/writing-skills/`
