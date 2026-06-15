@@ -252,6 +252,9 @@ function copyDirectoryRecursiveSync(source, target) {
     // Skip node_modules inside templates if it exists
     if (file === 'node_modules') continue;
 
+    // Skip copying the root README.md to avoid overwriting user's project documentation
+    if (file === 'README.md' && source === sourceDir) continue;
+
     if (fs.lstatSync(sourcePath).isDirectory()) {
       copyDirectoryRecursiveSync(sourcePath, targetPath);
     } else {
