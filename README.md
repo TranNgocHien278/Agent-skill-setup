@@ -22,7 +22,7 @@ npx @tnhorg/agent-skills init
 
 ---
 
-## 🗺️ System Architecture (ADR-001)
+## 🗺️ System Architecture
 
 The system implements a **two-tiered architecture** to keep your development environment clean and ensure easy upstream updates:
 
@@ -32,27 +32,28 @@ project-skill-setup/
 ├── AGENTS.md                   # 👤 Agent role-specific routing policies
 ├── README.md                   # 📄 You are here (project overview)
 │
-├── adr/                        # 🏛️ Architectural Decision Records
-│   └── 001-skill-folder-structure.md
+├── tooling/                    # 🛠️ AI Dev-Tooling support layer
+│   ├── skills/                 # ⚡ Domain category wrappers (Lightweight)
+│   │   ├── REGISTRY.md         # 📇 Master Registry Index of all skills
+│   │   ├── ai-agents/          # Agent framework skills (RAG, Swarm, Memory)
+│   │   ├── backend/            # Database and API instructions
+│   │   ├── devops/             # Deployment, K8s, and Cloud Run recipes
+│   │   ├── frontend/           # UI, styling, and GSAP animations
+│   │   ├── security/           # Cybersec, threat modeling, OWASP guides
+│   │   ├── shared/             # Coding principles, diagnostics, debugging
+│   │   └── workflow/           # Development lifecycle checklists
+│   │
+│   ├── sources/
+│   │   └── github/             # 🌐 Cloned upstream community skill repositories
+│   │
+│   ├── config/                 # ⚙️ Environment and package configurations
+│   └── scripts/                # 📜 Utility compilation and helper scripts
 │
-├── memory/                     # 💾 Handoff & session state persistence
-│
-├── reports/                    # 📊 System setup verification & analysis
-│   ├── md/                     # Source Markdown reports
-│   └── html/                   # Compiled interactive HTML reports
-│
-├── skills/                     # ⚡ Domain category wrappers (Lightweight)
-│   ├── REGISTRY.md             # 📇 Master Registry Index of all skills
-│   ├── ai-agents/              # Agent framework skills (RAG, Swarm, Memory)
-│   ├── backend/                # Database and API instructions
-│   ├── devops/                 # Deployment, K8s, and Cloud Run recipes
-│   ├── frontend/               # UI, styling, and GSAP animations
-│   ├── security/               # Cybersec, threat modeling, OWASP guides
-│   ├── shared/                 # Coding principles, diagnostics, debugging
-│   └── workflow/               # Development lifecycle checklists
-│
-└── sources/
-    └── github/                 # 🌐 Cloned upstream community skill repositories
+└── work/                       # 📊 Planning and reporting artifacts
+    ├── plans/                  # 📝 Project implementation plans
+    └── reports/                # 📈 System verification reports
+        ├── md/                 # Source Markdown reports
+        └── html/               # Compiled interactive HTML reports
 ```
 
 ---
@@ -65,15 +66,15 @@ When an agent initializes in this workspace, it executes the following protocol:
 graph TD
     Start[Agent Initializes] --> ReadRouter[1. Reads CLAUDE.md Startup Router]
     ReadRouter --> RoleCheck[2. Maps task against AGENTS.md Role Policies]
-    RoleCheck --> LoadRegistry[3. Reads skills/REGISTRY.md Index]
+    RoleCheck --> LoadRegistry[3. Reads tooling/skills/REGISTRY.md Index]
     LoadRegistry --> TargetSkill[4. Loads specific domain skill wrapper]
-    TargetSkill --> Execute[5. Executes task with direct link to sources/github/]
+    TargetSkill --> Execute[5. Executes task with direct link to tooling/sources/github/]
 ```
 
 1. **Startup**: The agent reads `CLAUDE.md` first to set baseline principles (Karpathy Coding Principles).
 2. **Role Mapping**: The agent maps its role against `AGENTS.md` to load checklists (e.g., Coder nabs TDD, Security Agent nabs Cybersec Index).
-3. **Skill Discovery**: The agent references `skills/REGISTRY.md` to discover task-specific skills.
-4. **Execution**: The agent loads a lightweight category wrapper (e.g., `skills/frontend/gsap-core.md`), which points to deep documentation under `sources/github/`.
+3. **Skill Discovery**: The agent references `tooling/skills/REGISTRY.md` to discover task-specific skills.
+4. **Execution**: The agent loads a lightweight category wrapper (e.g., `tooling/skills/frontend/gsap-core.md`), which points to deep documentation under `tooling/sources/github/`.
 
 ---
 
@@ -118,20 +119,20 @@ The repository includes **45+ categorized wrappers** mapping to specialized upst
 
 The project contains a built-in markdown-to-HTML compilation script to create clean, interactive reports using Tailwind CSS for human review:
 
-1. Create a markdown report inside `reports/md/` (e.g. `reports/md/audit.md`).
+1. Create a markdown report inside `work/reports/md/` (e.g. `work/reports/md/audit.md`).
 2. Run the compiler script:
    ```bash
-   node scripts/md_to_html.js reports/md/audit.md
+   node tooling/scripts/md_to_html.js work/reports/md/audit.md
    ```
-3. The script compiles the document and outputs a styled, responsive report in `reports/html/audit.html`.
+3. The script compiles the document and outputs a styled, responsive report in `work/reports/html/audit.html`.
 
 ---
 
 ## 📝 How to Add New Skills
 
-1. Place the cloned community repo under `sources/github/` (or write custom guides under `sources/notes/`).
-2. Add a concise `.md` wrapper under `skills/<domain>/`.
-3. Add the skill entry into [skills/REGISTRY.md](file:///c:/.USER%20FOLDER/Projects/Project-skill-setup/skills/REGISTRY.md) detailing its **Path**, **Source**, **Use-cases**, and **Load Priority**.
+1. Place the cloned community repo under `tooling/sources/github/` (or write custom guides under `tooling/sources/notes/`).
+2. Add a concise `.md` wrapper under `tooling/skills/<domain>/`.
+3. Add the skill entry into [tooling/skills/REGISTRY.md](file:///c:/.USER%20FOLDER/Projects/Project-skill-setup/tooling/skills/REGISTRY.md) detailing its **Path**, **Source**, **Use-cases**, and **Load Priority**.
 4. Update `CLAUDE.md` if the skill should be loaded globally.
 
 ---

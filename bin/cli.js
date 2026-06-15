@@ -515,7 +515,7 @@ async function main() {
     console.log('Files copied successfully.');
 
     // Write .env config
-    const envExamplePath = path.join(sourceDir, 'config/.env.example');
+    const envExamplePath = path.join(sourceDir, 'tooling/config/.env.example');
     let envContent = '';
     if (fs.existsSync(envExamplePath)) {
       envContent = fs.readFileSync(envExamplePath, 'utf8');
@@ -539,13 +539,13 @@ MEM0_HOST=http://localhost:8888
 `;
     }
 
-    const configDir = path.join(destDir, 'config');
+    const configDir = path.join(destDir, 'tooling/config');
     fs.writeFileSync(path.join(configDir, '.env'), envContent, 'utf8');
-    console.log('\x1b[32m[OK] Created config/.env configuration file.\x1b[0m');
+    console.log('\x1b[32m[OK] Created tooling/config/.env configuration file.\x1b[0m');
 
     // Run git clones
     console.log('\nCloning skill repositories...');
-    const githubDir = path.join(destDir, 'sources/github');
+    const githubDir = path.join(destDir, 'tooling/sources/github');
     if (!fs.existsSync(githubDir)) {
       fs.mkdirSync(githubDir, { recursive: true });
     }
@@ -555,7 +555,7 @@ MEM0_HOST=http://localhost:8888
         const destPath = path.join(githubDir, repo);
         const url = REPO_URLS[repo];
         if (fs.existsSync(destPath)) {
-          console.log(`[SKIP] ${repo} - already exists at sources/github/${repo}`);
+          console.log(`[SKIP] ${repo} - already exists at tooling/sources/github/${repo}`);
         } else {
           console.log(`[CLONE] ${repo} ...`);
           try {
@@ -567,9 +567,9 @@ MEM0_HOST=http://localhost:8888
       }
     }
 
-    // Install node dependencies in config/
+    // Install node dependencies in tooling/config/
     if (fs.existsSync(path.join(configDir, 'package.json'))) {
-      console.log('\nInstalling Node.js dependencies in config/...');
+      console.log('\nInstalling Node.js dependencies in tooling/config/...');
       execSync('npm install', { stdio: 'inherit', cwd: configDir });
     }
 
@@ -698,7 +698,7 @@ MEM0_HOST=http://localhost:8888
     console.log('====================================================');
     console.log('\nNext Steps:');
     console.log('1. Read CLAUDE.md to view baseline agent execution guidelines.');
-    console.log('2. Check skills/REGISTRY.md to view your active skills.');
+    console.log('2. Check tooling/skills/REGISTRY.md to view your active skills.');
     
     if (pythonInstallMode === 'venv') {
       console.log('\n[Python Virtual Environment]');

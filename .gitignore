@@ -1,0 +1,26 @@
+# Log files and runtime state
+.cocoindex_state/
+*.log
+.env
+.env.local
+
+# Cloned source repositories (community skills)
+tooling/sources/github/
+
+# Dependency directories
+node_modules/
+tooling/config/node_modules/
+.venv/
+__pycache__/
+*.pyc
+
+# Local/Custom configuration and environment secrets
+tooling/config/.env
+
+# Compiled interactive reports (keep source markdown)
+work/reports/html/
+
+# System testing reports and local configurations
+Real_Test_Report/
+scratch/
+.DS_Store
