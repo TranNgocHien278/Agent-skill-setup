@@ -79,6 +79,8 @@ project-skill-setup/
 5. **Do not load security skills** unless the task involves security.
 6. **Do not load all 754 cybersecurity skills** — use the index file to find relevant ones.
 7. **Report which skills you loaded** in your plan or final output.
+8. **Source Fallback** — if a skill wrapper pattern fails twice, fall back to the library's own `AGENTS.md`, `CLAUDE.md`, or `examples/` directory in `sources/github/`.
+9. **Version Check** — if a skill has a `verified_version` field, verify the installed version in the workspace (using `pip show`, `npm list`, etc.) before following the documented patterns.
 
 ---
 

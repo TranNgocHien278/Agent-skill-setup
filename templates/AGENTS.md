@@ -83,6 +83,14 @@ This document explains how different agent roles should use the skill system.
 - Load `skills/shared/mattpocock-teach.md` for teaching methodology.
 - Load domain-specific skills relevant to the topic being taught.
 
+## Troubleshooting: Source Fallback Protocol
+
+If a skill wrapper's code example or API documentation fails to run in your workspace:
+1. **Double Check Versions**: Verify the installed package version against the `verified_version` in the wrapper or registry.
+2. **Escalate to Source**: Do not attempt to patch wrapper code from memory or guess API signatures. Navigate directly to the library's local upstream clone in `sources/github/`.
+3. **Locate Ground Truth**: Inspect `AGENTS.md`, `CLAUDE.md`, or the `examples/` and `tests/` directories in the upstream repo to find the correct, updated API usage.
+4. **Update the Wrapper**: Once you find the correct pattern and verify it works, update the skill wrapper file with the new pattern and the newly verified package version so future agents do not repeat the failure.
+
 ---
 
 ## Handoff Between Sessions

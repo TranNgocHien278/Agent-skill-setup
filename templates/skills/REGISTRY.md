@@ -37,6 +37,18 @@
 - Use when: explaining concepts, creating learning sessions
 - Load priority: low
 
+### Windows Platform Compatibility Notes
+- Path: `skills/shared/windows-platform-notes.md`
+- Source: Custom Guide (internal templates)
+- Use when: running scripts/tools on Windows, configuring encoding, resolving pathing, or Docker networking on Windows
+- Load priority: high (when running on Windows host)
+
+### Skill Maintenance and Verification Checklist
+- Path: `skills/shared/skill-maintenance-checklist.md`
+- Source: Custom Guide (internal templates)
+- Use when: auditing, updating, or maintaining skill wrappers
+- Load priority: medium (when modifying registry/skills)
+
 ---
 
 ## Frontend
@@ -297,6 +309,7 @@
 - Source: `sources/github/cocoindex/skills/cocoindex/`
 - Use when: building RAG pipelines, data indexing, semantic search
 - Load priority: medium
+- Verified version: `cocoindex>=1.0.10 (v1 API)`
 - Note: Requires `pip install cocoindex` + PostgreSQL
 
 ### Graphiti Temporal Knowledge Graphs
@@ -304,6 +317,7 @@
 - Source: `sources/github/graphiti/`
 - Use when: building agent memory systems, temporal knowledge graphs
 - Load priority: medium
+- Verified version: `graphiti-core>=0.29.2`
 - Note: Requires `pip install graphiti-core` + Neo4j + OpenAI API key
 
 ### Ruflo Multi-Agent Orchestration
@@ -318,6 +332,7 @@
 - Source: `sources/github/mem0/`
 - Use when: personalized agent memory, user preference tracking, self-improving long-term logs
 - Load priority: high
+- Verified version: `mem0ai>=2.0.6`
 - Note: Requires MEM0_API_KEY for Platform cloud, or pip install mem0ai for self-hosted SDK
 
 ---
