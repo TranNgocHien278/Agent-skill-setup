@@ -1,6 +1,6 @@
 {
   "name": "@tnhorg/agent-skills",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A plug-and-play repository of engineering practices and security guidelines for AI agents",
   "main": "bin/cli.js",
   "bin": {
