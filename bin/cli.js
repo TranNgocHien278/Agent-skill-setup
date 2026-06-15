@@ -137,7 +137,7 @@ function askCheckbox(question, choices, defaults = []) {
         readline.cursorTo(process.stdout, 0);
         readline.clearLine(process.stdout, 0);
         const cursor = i === index ? '> ' : '  ';
-        const checkbox = selected[i] ? '[x]' : '[ ]';
+        const checkbox = selected[i] ? '[✓]' : '[ ]';
         process.stdout.write(`${cursor}${checkbox} ${choices[i]}\n`);
       }
     }
@@ -227,14 +227,42 @@ function askSelect(question, choices, defaultIdx = 0) {
   });
 }
 
+// Helper to find working python command
+function getPythonCommand() {
+  const commands = ['python', 'python3', 'py'];
+  for (const cmd of commands) {
+    try {
+      execSync(`${cmd} --version`, { stdio: 'ignore' });
+      return cmd;
+    } catch (e) {
+      // ignore
+    }
+  }
+  return null;
+}
+
 // Check if Python package is installed globally
 function checkPythonPackage(pkg) {
+  const pythonCmd = getPythonCommand();
+  if (!pythonCmd) return false;
+
+  // Try checking with python -m pip first as it's most reliable
+  try {
+    execSync(`${pythonCmd} -m pip show ${pkg}`, { stdio: 'ignore' });
+    return true;
+  } catch (e) {
+    // ignore
+  }
+
+  // Fallback to bare pip command
   try {
     execSync(`pip show ${pkg}`, { stdio: 'ignore' });
     return true;
   } catch (e) {
-    return false;
+    // ignore
   }
+
+  return false;
 }
 
 // Helper to copy directory recursively
@@ -546,18 +574,100 @@ MEM0_HOST=http://localhost:8888
     }
 
     // Install Python dependencies
-    if (needsPython && pythonInstallMode === 'venv') {
-      const venvDir = path.join(destDir, '.venv');
-      console.log(`\nCreating Python virtual environment (.venv) at ${venvDir}...`);
-      execSync('python -m venv .venv', { stdio: 'inherit', cwd: destDir });
-      const pipPath = process.platform === 'win32'
-        ? path.join(venvDir, 'Scripts', 'pip.exe')
-        : path.join(venvDir, 'bin', 'pip');
-      console.log('Installing dependencies inside the virtual environment...');
-      execSync(`"${pipPath}" install graphiti-core "cocoindex[embeddings]"`, { stdio: 'inherit' });
-    } else if (needsPython && pythonInstallMode === 'global') {
-      console.log('\nInstalling Python dependencies globally...');
-      execSync('pip install graphiti-core "cocoindex[embeddings]"', { stdio: 'inherit' });
+    if (needsPython) {
+      const pythonCmd = getPythonCommand();
+      if (!pythonCmd) {
+        console.log('\x1b[31m[ERROR] Python is not installed or not in system PATH. Cannot install Python dependencies.\x1b[0m');
+        console.log('Please install Python and ensure it is added to your PATH, then install dependencies manually.');
+        const skipChoice = await askSelect('How would you like to proceed?', [
+          'Skip Python dependencies and continue setup (Recommended)',
+          'Abort setup'
+        ]);
+        if (skipChoice === 1) {
+          process.exit(1);
+        }
+      } else {
+        if (pythonInstallMode === 'venv') {
+          const venvDir = path.join(destDir, '.venv');
+          console.log(`\nCreating Python virtual environment (.venv) at ${venvDir} using ${pythonCmd}...`);
+          try {
+            execSync(`${pythonCmd} -m venv .venv`, { stdio: 'inherit', cwd: destDir });
+            const pipPath = process.platform === 'win32'
+              ? path.join(venvDir, 'Scripts', 'pip.exe')
+              : path.join(venvDir, 'bin', 'pip');
+            console.log('Installing dependencies inside the virtual environment...');
+            execSync(`"${pipPath}" install graphiti-core "cocoindex[embeddings]"`, { stdio: 'inherit' });
+          } catch (e) {
+            console.log(`\x1b[31m[ERROR] Failed to install dependencies in virtual environment: ${e.message}\x1b[0m`);
+            const skipChoice = await askSelect('How would you like to proceed?', [
+              'Skip Python dependencies and continue setup',
+              'Abort setup'
+            ]);
+            if (skipChoice === 1) {
+              process.exit(1);
+            }
+          }
+        } else if (pythonInstallMode === 'global') {
+          console.log('\nInstalling Python dependencies globally...');
+          let pipInstalled = false;
+          
+          // Test if pip module is available
+          try {
+            execSync(`${pythonCmd} -m pip --version`, { stdio: 'ignore' });
+            pipInstalled = true;
+          } catch (e) {
+            // Check if bare pip works
+            try {
+              execSync('pip --version', { stdio: 'ignore' });
+              pipInstalled = true;
+            } catch (e2) {
+              // ignore
+            }
+          }
+
+          if (!pipInstalled) {
+            console.log('\x1b[33m[INFO] pip is not installed. Attempting to bootstrap pip using ensurepip...\x1b[0m');
+            try {
+              execSync(`${pythonCmd} -m ensurepip --default-pip`, { stdio: 'inherit' });
+              pipInstalled = true;
+            } catch (e) {
+              console.log('\x1b[31m[ERROR] Failed to bootstrap pip using ensurepip.\x1b[0m');
+            }
+          }
+
+          if (pipInstalled) {
+            try {
+              console.log('Installing graphiti-core and cocoindex...');
+              // Try running through python -m pip first (recommended & handles PATH issues better)
+              try {
+                execSync(`${pythonCmd} -m pip install graphiti-core "cocoindex[embeddings]"`, { stdio: 'inherit' });
+              } catch (e) {
+                // Fallback to bare pip command
+                execSync('pip install graphiti-core "cocoindex[embeddings]"', { stdio: 'inherit' });
+              }
+              console.log('\x1b[32m[OK] Python dependencies installed globally.\x1b[0m');
+            } catch (e) {
+              console.log(`\x1b[31m[ERROR] Failed to install Python dependencies globally: ${e.message}\x1b[0m`);
+              const skipChoice = await askSelect('How would you like to proceed?', [
+                'Skip Python dependencies and continue setup',
+                'Abort setup'
+              ]);
+              if (skipChoice === 1) {
+                process.exit(1);
+              }
+            }
+          } else {
+            console.log('\x1b[31m[ERROR] Could not locate or install pip. Cannot perform global install.\x1b[0m');
+            const skipChoice = await askSelect('How would you like to proceed?', [
+              'Skip Python dependencies and continue setup',
+              'Abort setup'
+            ]);
+            if (skipChoice === 1) {
+              process.exit(1);
+            }
+          }
+        }
+      }
     }
 
     // Spin up Docker databases if requested
