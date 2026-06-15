@@ -1,4 +1,4 @@
-# 🧠 Reusable Agent Skills (`@ruvnet/agent-skills`)
+# 🧠 Reusable Agent Skills (`@tnhorg/agent-skills`)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Node: 18+](https://img.shields.io/badge/Node-18+-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
@@ -15,7 +15,7 @@ This system keeps agent contexts slim, fast, and token-efficient by separating d
 Run the CLI tool inside your workspace root to initialize the directory structure, copy templates, clone community repositories, and bootstrap the agent skill environment:
 
 ```bash
-npx @ruvnet/agent-skills init
+npx @tnhorg/agent-skills init
 ```
 
 *This command automatically bootstraps your directory structure, copies default agent guides (`CLAUDE.md`, `AGENTS.md`), and clones all upstream developer repositories.*

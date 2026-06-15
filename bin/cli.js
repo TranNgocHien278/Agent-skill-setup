@@ -71,6 +71,7 @@ function askQuestion(query) {
 
 function askSecret(query) {
   return new Promise(resolve => {
+    process.stdin.resume();
     process.stdout.write(query);
     if (process.stdin.isTTY) {
       process.stdin.setRawMode(true);
@@ -111,6 +112,7 @@ function askSecret(query) {
 
 function askCheckbox(question, choices, defaults = []) {
   return new Promise(resolve => {
+    process.stdin.resume();
     console.log('\n' + question);
     console.log('  (Use Up/Down arrows, Space to toggle, [a] to toggle all, Enter to confirm)');
     
@@ -173,6 +175,7 @@ function askCheckbox(question, choices, defaults = []) {
 
 function askSelect(question, choices, defaultIdx = 0) {
   return new Promise(resolve => {
+    process.stdin.resume();
     console.log('\n' + question);
     console.log('  (Use Up/Down arrows to move, Enter to select)');
     

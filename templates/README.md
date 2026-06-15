@@ -15,7 +15,7 @@ This system keeps agent contexts slim, fast, and token-efficient by separating d
 Run the CLI tool inside your workspace root to initialize the directory structure, copy templates, clone community repositories, and bootstrap the agent skill environment:
 
 ```bash
-npx @ruvnet/agent-skills init
+npx @tnhorg/agent-skills init
 ```
 
 *This command automatically bootstraps your directory structure, copies default agent guides (`CLAUDE.md`, `AGENTS.md`), and clones all upstream developer repositories.*
