@@ -1,0 +1,26 @@
+{
+  "name": "@ruvnet/agent-skills",
+  "version": "1.0.0",
+  "description": "A plug-and-play repository of engineering practices and security guidelines for AI agents",
+  "main": "bin/cli.js",
+  "bin": {
+    "agent-skills": "bin/cli.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ruvnet/Project-skill-setup.git"
+  },
+  "keywords": [
+    "ai",
+    "agent",
+    "skills",
+    "cli",
+    "claude",
+    "gemini"
+  ],
+  "author": "ruvnet",
+  "license": "MIT"
+}
