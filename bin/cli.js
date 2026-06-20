@@ -333,23 +333,7 @@ async function waitForPort(port, name, timeoutMs = 30000) {
   return false;
 }
 
-// Helper to safely spin up container
-function startDockerContainer(name, runCmd) {
-  try {
-    const list = execSync(`docker ps -a --filter "name=^/${name}$" --format "{{.Names}}"`, { encoding: 'utf8' }).trim();
-    if (list === name) {
-      console.log(`[INFO] Container ${name} already exists. Starting container...`);
-      execSync(`docker start ${name}`, { stdio: 'ignore' });
-    } else {
-      console.log(`[DOCKER] Running new container ${name}...`);
-      execSync(runCmd, { stdio: 'ignore' });
-    }
-    return true;
-  } catch (e) {
-    console.log(`\x1b[31m[ERROR] Failed to start Docker container ${name}: ${e.message}\x1b[0m`);
-    return false;
-  }
-}
+// Docker compose functionality replaces individual startDockerContainer
 
 // Run Main Flow
 async function main() {
@@ -440,6 +424,7 @@ async function main() {
     // Step 4: Database & Docker Settings
     // ----------------------------------------
     let runDocker = false;
+    let startupWithSystem = false;
     let neo4jUri = 'bolt://localhost:7687';
     let neo4jUser = 'neo4j';
     let neo4jPassword = 'your_neo4j_password_here';
@@ -454,12 +439,19 @@ async function main() {
       runDocker = (dockerChoiceIdx === 1);
 
       if (runDocker) {
+        const startupChoiceIdx = await askSelect('Do you want to configure Docker and the database containers to start automatically when the system boots? (Startup with system)', [
+          'No (Start manually or only when running Docker Desktop)',
+          'Yes (Start Docker Desktop and database containers automatically on system startup)'
+        ]);
+        startupWithSystem = (startupChoiceIdx === 1);
+
         // Validate docker is running
         try {
           execSync('docker info', { stdio: 'ignore' });
         } catch (e) {
           console.log('\x1b[31m[ERROR] Docker is not running. Falling back to manual configuration...\x1b[0m');
           runDocker = false;
+          startupWithSystem = false;
         }
       }
 
@@ -496,6 +488,9 @@ async function main() {
     }
     if (needsNeo4j || needsPostgres) {
       console.log('Docker Database Spinup:', runDocker ? 'Enabled' : 'Disabled');
+      if (runDocker) {
+        console.log('Startup with System:', startupWithSystem ? 'Enabled' : 'Disabled');
+      }
     }
     console.log('====================================================');
 
@@ -670,14 +665,130 @@ MEM0_HOST=http://localhost:8888
       }
     }
 
-    // Spin up Docker databases if requested
-    if (runDocker) {
-      console.log('\nSpinning up database containers...');
+    // Generate and write docker-compose.yml if needed
+    if (needsNeo4j || needsPostgres) {
+      console.log('\nGenerating docker-compose.yml configuration...');
+      const infraDir = path.join(destDir, 'infra');
+      if (!fs.existsSync(infraDir)) {
+        fs.mkdirSync(infraDir, { recursive: true });
+      }
+
+      let composeContent = `version: '3.8'
+
+services:
+`;
+
       if (needsNeo4j) {
-        startDockerContainer('neo4j', `docker run -d --name neo4j -p 7474:7474 -p 7687:7687 -e NEO4J_AUTH=${neo4jUser}/${neo4jPassword} neo4j`);
+        composeContent += `  # 1. Cơ sở dữ liệu Neo4j cho Graphiti (Temporal Knowledge Graph)
+  neo4j:
+    image: neo4j:latest
+    container_name: agentos-neo4j
+    ports:
+      - "7474:7474" # Giao diện Web (HTTP)
+      - "7687:7687" # Giao thức Bolt (Python Client kết nối)
+    environment:
+      - NEO4J_AUTH=${neo4jUser}/${neo4jPassword}
+    volumes:
+      - neo4j_data:/data
+      - neo4j_logs:/logs
+    restart: unless-stopped
+
+`;
+      }
+
+      if (needsPostgres) {
+        let pgUser = 'postgres';
+        let pgPassword = 'postgres';
+        let pgDb = 'cocoindex';
+        try {
+          const match = postgresUrl.match(/postgresql:\/\/([^:]+):([^@]+)@[^/]+\/(.+)/);
+          if (match) {
+            pgUser = match[1];
+            pgPassword = match[2];
+            pgDb = match[3];
+          }
+        } catch (e) {
+          // ignore
+        }
+
+        composeContent += `  # 2. Cơ sở dữ liệu PostgreSQL tích hợp pgvector cho CocoIndex (RAG Pipeline)
+  postgres-vector:
+    image: pgvector/pgvector:pg16
+    container_name: agentos-postgres-vector
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=${pgUser}
+      - POSTGRES_PASSWORD=${pgPassword}
+      - POSTGRES_DB=${pgDb}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+`;
+      }
+
+      composeContent += `volumes:
+`;
+      if (needsNeo4j) {
+        composeContent += `  neo4j_data:
+  neo4j_logs:
+`;
       }
       if (needsPostgres) {
-        startDockerContainer('postgres', `docker run -d --name postgres -p 5432:5432 -e POSTGRES_PASSWORD=postgres pgvector/pgvector:pg16`);
+        composeContent += `  postgres_data:
+`;
+      }
+
+      try {
+        fs.writeFileSync(path.join(infraDir, 'docker-compose.yml'), composeContent, 'utf8');
+        console.log('\x1b[32m[OK] Created infra/docker-compose.yml successfully.\x1b[0m');
+      } catch (e) {
+        console.log(`\x1b[31m[ERROR] Failed to write docker-compose.yml: ${e.message}\x1b[0m`);
+      }
+    }
+
+    // Spin up Docker databases if requested
+    if (runDocker) {
+      console.log('\nSpinning up database containers via Docker Compose...');
+      const infraDir = path.join(destDir, 'infra');
+      try {
+        let composeCmd = 'docker compose';
+        try {
+          execSync('docker compose version', { stdio: 'ignore' });
+        } catch (e) {
+          try {
+            execSync('docker-compose version', { stdio: 'ignore' });
+            composeCmd = 'docker-compose';
+          } catch (e2) {
+            throw new Error('Neither "docker compose" nor "docker-compose" commands are available in your system path.');
+          }
+        }
+
+        console.log(`[DOCKER] Running: ${composeCmd} up -d`);
+        execSync(`${composeCmd} up -d`, { stdio: 'inherit', cwd: infraDir });
+        console.log('\x1b[32m[OK] Docker Compose services started.\x1b[0m');
+      } catch (e) {
+        console.log(`\x1b[31m[ERROR] Failed to start Docker Compose: ${e.message}\x1b[0m`);
+      }
+
+      // Configure Startup with System if requested
+      if (startupWithSystem) {
+        if (process.platform === 'win32') {
+          console.log('\nConfiguring Docker Desktop to start automatically on Windows boot...');
+          try {
+            const regCmd = `reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run" /v "Docker Desktop" /t REG_SZ /d "\\"C:\\Program Files\\Docker\\Docker\\Docker Desktop.exe\\"" /f`;
+            execSync(regCmd, { stdio: 'ignore' });
+            console.log('\x1b[32m[OK] Successfully configured Docker Desktop to start automatically on startup.\x1b[0m');
+          } catch (e) {
+            console.log('\x1b[33m[WARNING] Could not configure registry key for Docker Desktop. You may need to run this command as Administrator:\x1b[0m');
+            console.log('  reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run" /v "Docker Desktop" /t REG_SZ /d "\\"C:\\Program Files\\Docker\\Docker\\Docker Desktop.exe\\"" /f');
+            console.log('Or enable "Start Docker Desktop when you log in" in Docker Desktop settings.');
+          }
+        } else {
+          console.log('\n[INFO] Auto-startup configuration is only implemented for Windows in this installer.');
+          console.log('For other operating systems, please configure the Docker daemon to start on boot (e.g., sudo systemctl enable docker).');
+        }
       }
 
       // Check ports connection
